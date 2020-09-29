@@ -1,3 +1,5 @@
 node_templates
 Instructions.md
 schema.png
+node_modules
+package-lock.json
