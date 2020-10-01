@@ -1,5 +1,8 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const Role = require("./exports/Role");
+const Employee = require("./exports/Employee");
+const Department = require("./exports/Department");
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -29,19 +32,19 @@ function runApp() {
         .then(function(answer) {
             switch(answer.action) {
                 case "Add departments, roles, or employees.":
-                    add();
+                    addWhat();
                     break;
                 case "View departments, roles, or employees.":
-                    view();
+                    viewWhat();
                     break;
                 case "Update employee roles":
-                    update();
+                    updateWhat();
                     break;
             };
         });
 };
 
-function add() {
+function addWhat() {
     inquirer
         .prompt({
             name: "addWhat",
@@ -50,19 +53,28 @@ function add() {
             choices: [
                 "Department",
                 "Role",
-                "Employee"
+                "Employee",
+                "Return to last question."
             ]
         })
         .then(function(answer) {
             switch (answer.addWhat) {
                 case "Department":
-                    addDeptartment();
+                    addDepartment();
                     break;
                 case "Role":
                     addRole();
                     break;
                 case "Employee":
                     addEmployee();
+                    break;
+                case "Return to last question.":
+                    runApp();
+                    break;
             };
         });
 };
+
+function addDepartment() {
+
+}
