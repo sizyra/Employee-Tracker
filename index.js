@@ -1,8 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const Role = require("./exports/Role");
-const Employee = require("./exports/Employee");
-const Department = require("./exports/Department");
+
+let existingDepts = [];
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -29,8 +28,8 @@ function runApp() {
                 "Update employee roles"
             ]
         })
-        .then(function(answer) {
-            switch(answer.action) {
+        .then(function(answerInit) {
+            switch(answerInit.action) {
                 case "Add departments, roles, or employees.":
                     addWhat();
                     break;
@@ -57,8 +56,8 @@ function addWhat() {
                 "Return to last question."
             ]
         })
-        .then(function(answer) {
-            switch (answer.addWhat) {
+        .then(function(answerAW) {
+            switch (answerAW.addWhat) {
                 case "Department":
                     addDepartment();
                     break;
@@ -76,5 +75,67 @@ function addWhat() {
 };
 
 function addDepartment() {
+    inquirer
+        .prompt({
+            name: "departmentName",
+            type: "input",
+            message: "What is the name of the department you would like to add?"
+        })
+        .then(function(answerDept) {
+            let deptName = answerDept.departmentName
+            let sql = `INSERT INTO department (name) VALUES (${deptName})`
+            connection.query(sql, function (err, result) {
+                if (err) throw err;
+                return `Department named '${deptName}' added to the database.`
+            });
 
-}
+            existingDepts.push(deptName);
+        });
+};
+
+function addRole() {
+    if (existingDepts.length = 0) {
+        inquirer
+            .prompt({
+                name: "noDept",
+                type: "list",
+                message: "There must be a department to add a role to before creating a role. What would you like to do?",
+                choices: [
+                    "Add a department.",
+                    "Return to the beginning."
+                ]
+            })
+            .then(function(answers) {
+                switch(answers.noDept) {
+                    case "Add a department.":
+                        addDepartment();
+                        break;
+                    case "Return to the beginning.":
+                        runApp();
+                        break;
+                };
+            });
+    } else {
+        inquirer
+            .prompt([
+                {
+                    name: "roleName",
+                    type: "input",
+                    message: "What is the name of the role you would like to add?"
+                },
+                {
+                    name: "roleSalary",
+                    type: "number",
+                    message: "What is the salary for this role?"
+                },
+                {
+                    name: "deptID",
+                    type: "list",
+                    message: "Which department will this role be in?",
+                    choices: [
+                        existingDepts
+                    ]
+                }
+            ])
+    };
+};
