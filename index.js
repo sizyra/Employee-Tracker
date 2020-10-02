@@ -7,7 +7,7 @@ const connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "RN80440330!",
+    password: "Rn80440330!",
     database: "employee_trackerDB"
 });
 
@@ -20,7 +20,7 @@ function runApp() {
     inquirer
         .prompt({
             name: "action",
-            type: "rawlist",
+            type: "list",
             message: "What would you like to do?",
             choices: [
                 "Add departments, roles, or employees.",
@@ -47,7 +47,7 @@ function addWhat() {
     inquirer
         .prompt({
             name: "addWhat",
-            type: "rawlist",
+            type: "list",
             message: "What would you like to add?",
             choices: [
                 "Department",
@@ -74,7 +74,7 @@ function addWhat() {
         });
 };
 
-function addDepartment() {
+function addDepartment(dept) {
     inquirer
         .prompt({
             name: "departmentName",
@@ -83,18 +83,19 @@ function addDepartment() {
         })
         .then(function(answerDept) {
             let deptName = answerDept.departmentName
-            let sql = `INSERT INTO department (name) VALUES (${deptName})`
+            let sql = `INSERT INTO department (name) VALUES ('${deptName}')`
             connection.query(sql, function (err, result) {
                 if (err) throw err;
                 return `Department named '${deptName}' added to the database.`
             });
 
-            existingDepts.push(deptName);
+            existingDepts.push(dept);
+            runApp();
         });
 };
 
 function addRole() {
-    if (existingDepts.length = 0) {
+    if (existingDepts.length < 1) {
         inquirer
             .prompt({
                 name: "noDept",
