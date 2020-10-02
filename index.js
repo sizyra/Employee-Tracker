@@ -97,8 +97,10 @@ function addDepartment() {
 };
 
 function addRole() {
-    connection.query('SELECT * FROM department').then(result => {
-        const options = result.map(row => row.column);
+    connection.query('SELECT * FROM department', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.name);
+        console.log(options);
         if (options.length < 1) {
             inquirer
                 .prompt({
@@ -127,21 +129,28 @@ function addRole() {
                         name: "deptID",
                         type: "list",
                         message: "Which department will this role be in?",
-                        choices: [
-                            options
-                        ]
+                        choices: options
                     },
                     {
-                        name: "roleName",
+                        name: "roleTitle",
                         type: "input",
-                        message: "What is the name of the role you would like to add?"
+                        message: "What is the title of the role you would like to add?"
                     },
                     {
                         name: "roleSalary",
-                        type: "number",
-                        message: "What is the salary for this role?"
+                        type: "input",
+                        message: "What is the salary for this role? ($##,###)"
                     }
-                ]);
+                ])
+                .then(function(answers) {
+                    const deptID = result[result.map(row => row.name).indexOf(answers.deptID)].id;
+                    const title = answers.roleTitle;
+                    const salary = answers.roleSalary;
+                    connection.query(`INSERT INTO role (department_id, title, salary) VALUES (${title}, ${salary}, ${deptID})`, function(err, result) {
+                        if (err) throw err;
+                        return `Role titled '${title}' in department '${deptID}' with salary '${salary}' has been added to the database.`
+                    })
+                })
         };
     });
 };
