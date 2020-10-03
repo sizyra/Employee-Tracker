@@ -100,7 +100,6 @@ function addRole() {
     connection.query('SELECT * FROM department', function (err, result) {
         if (err) throw err;
         const options = result.map(row => row.name);
-        console.log(options);
         if (options.length < 1) {
             inquirer
                 .prompt({
@@ -139,24 +138,88 @@ function addRole() {
                     {
                         name: "roleSalary",
                         type: "input",
-                        message: "What is the salary for this role? ($##,###)"
+                        message: "What is the salary for this role? Do not include anything but numbers."
                     }
                 ])
                 .then(function(answers) {
                     const deptID = result[result.map(row => row.name).indexOf(answers.deptID)].id;
                     const title = answers.roleTitle;
                     const salary = answers.roleSalary;
-                    connection.query(`INSERT INTO role (department_id, title, salary) VALUES (${title}, ${salary}, ${deptID})`, function(err, result) {
+                    const sql = "INSERT INTO role (department_id, title, salary) VALUES (?, ?, ?)"
+                    const params = [deptID, title, salary]
+                    connection.query(sql, params, function(err, result) {
                         if (err) throw err;
                         return `Role titled '${title}' in department '${deptID}' with salary '${salary}' has been added to the database.`
                     })
+                    runApp();
                 })
         };
     });
 };
 
 function addEmployee() {
-
+    connection.query('SELECT * FROM role', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noRole",
+                    type: "list",
+                    message: "There must be a role to add an employee to before adding an employee. What would you like to do?",
+                    choices: [
+                        "Add a role.",
+                        "Return to the beginning."
+                    ]
+                })
+                .then(function(answers) {
+                    switch(answers.noRole) {
+                        case "Add a role.":
+                            addRole();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            inquirer
+                .prompt([
+                    {
+                        name: "firstName",
+                        type: "input",
+                        message: "What is the employee's first name?"
+                    },
+                    {
+                        name: "lastName",
+                        type: "input",
+                        message: "What is the employee's last name?"
+                    },
+                    {
+                        name: "roleID",
+                        type: "list",
+                        message: "What is the employee's role?",
+                        choices: options
+                    },
+                    {
+                        name: "manager",
+                        type: "list",
+                        message: "Does this employee have a manager?",
+                        choices: [
+                            "Yes.",
+                            "No."
+                        ]
+                    }
+                ]).then(function(answers) {
+                    if (answers.manager === "Yes.") {
+                        inquirer
+                            .prompt([
+                                
+                            ])
+                    }
+                })
+        }
+    });
 }
 
 function delWhat() {
