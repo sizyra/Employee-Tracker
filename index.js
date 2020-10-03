@@ -38,8 +38,8 @@ function runApp() {
                 case "View departments, roles, or employees.":
                     viewWhat();
                     break;
-                case "Update employee roles":
-                    updateWhat();
+                case "Update employee roles.":
+                    update();
                     break;
             };
         });
@@ -55,7 +55,6 @@ function addWhat() {
                 "Department",
                 "Role",
                 "Employee",
-                "Return to last question."
             ]
         })
         .then(function(answerAW) {
@@ -68,9 +67,6 @@ function addWhat() {
                     break;
                 case "Employee":
                     addEmployee();
-                    break;
-                case "Return to last question.":
-                    runApp();
                     break;
             };
         });
@@ -89,10 +85,8 @@ function addDepartment() {
             connection.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log(`Department named '${deptName}' added to the database.`);
+                runApp();
             });
-
-            console.log(existingDepts);
-            runApp();
         });
 };
 
@@ -150,8 +144,8 @@ function addRole() {
                     connection.query(sql, params, function(err, result) {
                         if (err) throw err;
                         console.log(`Role titled '${title}' in department '${deptID}' with salary '${salary}' has been added to the database.`);
+                        runApp();
                     })
-                    runApp();
                 })
         };
     });
@@ -160,7 +154,7 @@ function addRole() {
 function addEmployee() {
     connection.query('SELECT * FROM role', function (err, result) {
         if (err) throw err;
-        const options = result.map(row => row.name);
+        const options = result.map(row => row.title);
         if (options.length < 1) {
             inquirer
                 .prompt({
@@ -212,10 +206,36 @@ function addEmployee() {
                     }
                 ]).then(function(answers) {
                     if (answers.manager === "Yes.") {
-                        inquirer
-                            .prompt([
-                                
-                            ])
+                        connection.query(`SELECT * FROM employee WHERE title LIKE '%Manager%'`, function(err,result) {
+                            const managers = result.map(row => row.last_name);
+                            inquirer
+                                .prompt({
+                                    name: "managerID",
+                                    type: "rawlist",
+                                    message: "Which manager does this employee work under?",
+                                    choices: managers
+                                })
+                            const first = answers.firstName;
+                            const last = answers.lastName;
+                            const roleID = result[result.map(row => row.name).indexOf(answers.roleID)].id;
+                            const managerID = result[result.map(row => row.name).indexOf(answers.managerID)].id;
+                            const params = [first, last, roleID, managerID]
+                            const sql = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)'
+                            connection.query(sql, params, function(err, result) {
+                                if (err) throw err;
+                                console.log(`Employee named '${first} ${last}' with role '${roleID}' working under '${managerID}' has been added to the database.`)
+                            })
+                        })
+                    } else {
+                        const first = answers.firstName;
+                        const last = answers.lastName;
+                        const roleID = result[result.map(row => row.name).indexOf(answers.roleID)].id;
+                        const params = [first, last, roleID];
+                        const sql = 'INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)'
+                        connection.query(sql, params, function(err, result) {
+                            if (err) throw err;
+                            console.log(`Employee named '${first} ${last}' with role '${roleID}' has been added to the database.`)
+                        })
                     }
                 })
         }
@@ -409,9 +429,9 @@ function viewWhat() {
 }
 
 function viewDepartment() {
-    connection.query('SELECT * FROM Department', function (err, result) {
+    connection.query('SELECT * FROM department', function (err, result) {
         if (err) throw err;
-        const options = result.map(row => row.last_name);
+        const options = result.map(row => row.name);
         if (options.length < 1) {
             inquirer
                 .prompt({
@@ -432,6 +452,117 @@ function viewDepartment() {
                             break;
                     };
                 });
+        } else {
+            console.log(result);
+            runApp();
+        }
+    });
+};
+
+function viewRole() {
+    connection.query('SELECT * FROM role', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noRoleView",
+                    type: "list",
+                    message: "There are no roles to view. What would you like to do?",
+                    choices: [
+                        "Add a role.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noRoleView) {
+                        case "Add a role.":
+                            addRole();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            console.log(result);
+            runApp();
+        }
+    });
+}
+
+function viewEmployee() {
+    connection.query('SELECT * FROM employee', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.last_name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noEmployeeView",
+                    type: "list",
+                    message: "There are no employees to view. What would you like to do?",
+                    choices: [
+                        "Add an employee.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noEmployeeView) {
+                        case "Add an employee.":
+                            addEmployee();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            console.log(result);
+            runApp();
+        }
+    });
+}
+
+function update() {
+    console.log("test");
+    connection.query('SELECT * FROM employee', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.last_name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noEmployeeUpdate",
+                    type: "list",
+                    message: "There are no employees to update. What would you like to do?",
+                    choices: [
+                        "Add an employee.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noEmployeeUpdate) {
+                        case "Add an employee.":
+                            addEmployee();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            inquirer
+                .prompt([
+                    {
+                        name: "updateWho",
+                        type: "list",
+                        message: "Which employee's role would you like to update?",
+                        choices: options
+                    },
+                    {
+                        name: "updateWhat",
+                        type: "input",
+                        message: "Enter the updated role here."
+                    }
+                ]).then(function(answers) {
+                    const sql = `UPDATE last_name FROM employee WHERE last_name = '${answers.updateWho}' SET role = '${answers.updateWhat}'`
+                })
         }
     })
 }
