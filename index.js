@@ -205,42 +205,43 @@ function addEmployee() {
                         ]
                     }
                 ]).then(function(answers) {
-                    if (answers.manager === "Yes.") {
-                        connection.query(`SELECT * FROM employee WHERE title LIKE '%Manager%'`, function(err,result) {
-                            const managers = result.map(row => row.last_name);
+                    const first = answers.firstName;
+                    const last = answers.lastName;
+                    const roleID = result[result.map(row => row.title).indexOf(answers.roleID)].id;
+                    if (answers.manager === "No.") {
+                        const params = [first, last, roleID];
+                        const sql = 'INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)'
+                        connection.query(sql, params, function(err, res) {
+                            if (err) throw err;
+                            console.log(`Employee named '${first} ${last}' with role '${roleID}' has been added to the database.`)
+                            runApp();
+                        });
+                    } else {
+                        connection.query(`SELECT * FROM employee WHERE title LIKE '%Manager%'`, function(err,results) {
+                            if (err) throw err;
+                            const managers = results.map(row => row.last_name);
                             inquirer
                                 .prompt({
                                     name: "managerID",
                                     type: "rawlist",
                                     message: "Which manager does this employee work under?",
                                     choices: managers
+                                }).then(function(answer) {
+                                    const managerID = results[results.map(row => row.name).indexOf(answer.managerID)].id;
+                                    const params = [first, last, roleID, managerID]
+                                    const sql = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)'
+                                    connection.query(sql, params, function(err, result) {
+                                        if (err) throw err;
+                                        console.log(`Employee named '${first} ${last}' with role '${roleID}' working under '${managerID}' has been added to the database.`)
+                                        runApp();
+                                    });
                                 })
-                            const first = answers.firstName;
-                            const last = answers.lastName;
-                            const roleID = result[result.map(row => row.name).indexOf(answers.roleID)].id;
-                            const managerID = result[result.map(row => row.name).indexOf(answers.managerID)].id;
-                            const params = [first, last, roleID, managerID]
-                            const sql = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)'
-                            connection.query(sql, params, function(err, result) {
-                                if (err) throw err;
-                                console.log(`Employee named '${first} ${last}' with role '${roleID}' working under '${managerID}' has been added to the database.`)
-                            })
-                        })
-                    } else {
-                        const first = answers.firstName;
-                        const last = answers.lastName;
-                        const roleID = result[result.map(row => row.name).indexOf(answers.roleID)].id;
-                        const params = [first, last, roleID];
-                        const sql = 'INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)'
-                        connection.query(sql, params, function(err, result) {
-                            if (err) throw err;
-                            console.log(`Employee named '${first} ${last}' with role '${roleID}' has been added to the database.`)
-                        })
-                    }
-                })
-        }
+                        });
+                    };
+                });
+        };
     });
-}
+};
 
 function delWhat() {
     inquirer
