@@ -24,6 +24,6 @@ CREATE TABLE employee (
     manager_id INT
 );
 
-INSERT INTO role (title, salary, department_id) VALUES (Manager, 70000, 1);
-INSERT INTO role (title, salary, department_id) VALUES (Manager, 70000, 2);
-INSERT INTO role (title, salary, department_id) VALUES (Manager, 70000, 3);
+INSERT INTO role (title, salary, department_id) VALUES ('HR Manager', 70000, 1);
+INSERT INTO role (title, salary, department_id) VALUES ('Marketing Manager', 70000, 2);
+INSERT INTO role (title, salary, department_id) VALUES ('Payroll Manager', 70000, 3);

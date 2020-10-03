@@ -217,7 +217,7 @@ function addEmployee() {
                             runApp();
                         });
                     } else {
-                        connection.query(`SELECT * FROM employee WHERE title LIKE '%Manager%'`, function(err,results) {
+                        connection.query("SELECT role.title, role.id, employee.last_name FROM role LEFT JOIN employee ON role.id = employee.role_id WHERE role.title LIKE '%Manager%' AND employee.last_name IS NOT NULL;", function(err,results) {
                             if (err) throw err;
                             const managers = results.map(row => row.last_name);
                             inquirer
@@ -227,7 +227,7 @@ function addEmployee() {
                                     message: "Which manager does this employee work under?",
                                     choices: managers
                                 }).then(function(answer) {
-                                    const managerID = results[results.map(row => row.name).indexOf(answer.managerID)].id;
+                                    const managerID = results[results.map(row => row.last_name).indexOf(answer.managerID)].id;
                                     const params = [first, last, roleID, managerID]
                                     const sql = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)'
                                     connection.query(sql, params, function(err, result) {
@@ -392,7 +392,7 @@ function delEmployee() {
                     choices: options
                 }).then(function(answers) {
                     const delEmployee = answers.deleteEmployee
-                    const sql = `DELETE FROM employee WHERE title = '${delEmployee}'`
+                    const sql = `DELETE FROM employee WHERE last_name = '${delEmployee}'`
                     connection.query(sql, function (err, result) {
                         if (err) throw err;
                         console.log(`Employee '${delEmployee}' has been deleted.`)
@@ -562,8 +562,10 @@ function update() {
                         message: "Enter the updated role here."
                     }
                 ]).then(function(answers) {
-                    const sql = `UPDATE last_name FROM employee WHERE last_name = '${answers.updateWho}' SET role = '${answers.updateWhat}'`
-                })
-        }
-    })
-}
+                    const sql = `UPDATE last_name FROM employee WHERE last_name = '${answers.updateWho}' SET role = '${answers.updateWhat}'`;
+                    console.log(`Employee with last name '${answers.updateWho}' has had their role updated to '${answers.updateWhat}.'`);
+                    runApp();
+                });
+        };
+    });
+};
