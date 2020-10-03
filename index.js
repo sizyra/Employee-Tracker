@@ -88,7 +88,7 @@ function addDepartment() {
             let sql = `INSERT INTO department (name) VALUES ('${deptName}')`
             connection.query(sql, function (err, result) {
                 if (err) throw err;
-                return `Department named '${deptName}' added to the database.`
+                console.log(`Department named '${deptName}' added to the database.`);
             });
 
             console.log(existingDepts);
@@ -149,7 +149,7 @@ function addRole() {
                     const params = [deptID, title, salary]
                     connection.query(sql, params, function(err, result) {
                         if (err) throw err;
-                        return `Role titled '${title}' in department '${deptID}' with salary '${salary}' has been added to the database.`
+                        console.log(`Role titled '${title}' in department '${deptID}' with salary '${salary}' has been added to the database.`);
                     })
                     runApp();
                 })
@@ -225,7 +225,7 @@ function addEmployee() {
 function delWhat() {
     inquirer
         .prompt({
-            name: "delwhat",
+            name: "delWhat",
             type: "list",
             message: "What would you like to delete?",
             choices: [
@@ -249,6 +249,189 @@ function delWhat() {
 }
 
 function delDepartment() {
-    inquirer
+    connection.query('SELECT * FROM department', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.name);
+        console.log(options);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noDeptDel",
+                    type: "list",
+                    message: "There are no departments to delete. What would you like to do?",
+                    choices: [
+                        "Add a department.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noDeptDel) {
+                        case "Add a department.":
+                            addDepartment();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            inquirer
+                .prompt({
+                    name: "deleteDept",
+                    type: "rawlist",
+                    message: "Which department would you like to delete?",
+                    choices: options
+                }).then(function(answers) {
+                    const delDept = answers.deleteDept
+                    const sql = `DELETE FROM department WHERE name = '${delDept}'`
+                    connection.query(sql, function (err, result) {
+                        if (err) throw err;
+                        console.log(`Department '${delDept}' has been deleted.`)
+                        runApp();
+                    });
+                });
+        };
+    });
+};
 
+function delRole() {
+    connection.query('SELECT * FROM role', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.title);
+        console.log(options);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noRoleDel",
+                    type: "list",
+                    message: "There are no roles to delete. What would you like to do?",
+                    choices: [
+                        "Add a role.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noRoleDel) {
+                        case "Add a role.":
+                            addRole();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            inquirer
+                .prompt({
+                    name: "deleteRole",
+                    type: "rawlist",
+                    message: "Which role would you like to delete?",
+                    choices: options
+                }).then(function(answers) {
+                    const delRole = answers.deleteRole
+                    const sql = `DELETE FROM role WHERE title = '${delRole}'`
+                    connection.query(sql, function (err, result) {
+                        if (err) throw err;
+                        console.log(`Role '${delRole}' has been deleted.`)
+                        runApp();
+                    });
+                });
+        };
+    });
+}
+
+function delEmployee() {
+    connection.query('SELECT * FROM employee', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.last_name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noEmployeeDel",
+                    type: "list",
+                    message: "There are no employees to delete. What would you like to do?",
+                    choices: [
+                        "Add an employee.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noEmployeeDel) {
+                        case "Add a employee.":
+                            addEmployee();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        } else {
+            inquirer
+                .prompt({
+                    name: "deleteEmployee",
+                    type: "rawlist",
+                    message: "Which employee would you like to delete?",
+                    choices: options
+                }).then(function(answers) {
+                    const delEmployee = answers.deleteEmployee
+                    const sql = `DELETE FROM employee WHERE title = '${delEmployee}'`
+                    connection.query(sql, function (err, result) {
+                        if (err) throw err;
+                        console.log(`Employee '${delEmployee}' has been deleted.`)
+                        runApp();
+                    });
+                });
+        };
+    });
+}
+
+function viewWhat() {
+    inquirer
+        .prompt({
+            name: "viewWhat",
+            type: "list",
+            message: "Which table would you like to view?",
+            choices: [
+                "Departments.",
+                "Roles.",
+                "Employees."
+            ]
+        })
+        .then(function(answers) {
+            switch(answers.viewWhat){
+                case "Departments.":
+                    viewDepartment();
+                    break;
+                case "Roles.":
+                    viewRole();
+                    break;
+                case "Employees.":
+                    viewEmployee();
+            }
+        })
+}
+
+function viewDepartment() {
+    connection.query('SELECT * FROM Department', function (err, result) {
+        if (err) throw err;
+        const options = result.map(row => row.last_name);
+        if (options.length < 1) {
+            inquirer
+                .prompt({
+                    name: "noDeptView",
+                    type: "list",
+                    message: "There are no departments to view. What would you like to do?",
+                    choices: [
+                        "Add a department.",
+                        "Return to the beginning."
+                    ]
+                }).then(function(answers) {
+                    switch(answers.noDeptView) {
+                        case "Add a department.":
+                            addDepartment();
+                            break;
+                        case "Return to the beginning.":
+                            runApp();
+                            break;
+                    };
+                });
+        }
+    })
 }
